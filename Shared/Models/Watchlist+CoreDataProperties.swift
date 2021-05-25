@@ -10,10 +10,10 @@ import Foundation
 import CoreData
 import SwiftUI
 
-enum MediaType: String {
+enum MediaType: String, Equatable {
     case movie = "movie"
     case tv = "tv"
-    case media = "media"
+    case multi = "multi"
 }
 
 extension Watchlist {
@@ -33,7 +33,7 @@ extension Watchlist {
     
     var mediaType: MediaType {
         get {
-            MediaType(rawValue: type) ?? .media
+            MediaType(rawValue: type) ?? .multi
         }
         set {
             type = newValue.rawValue

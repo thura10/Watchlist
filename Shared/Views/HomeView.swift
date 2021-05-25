@@ -8,44 +8,58 @@
 import SwiftUI
 import CoreData
 
-enum Screen: String {
-    case upcoming, watchlist, settings
+private enum Screen: String {
+    case upcoming = "Upcoming"
+    case watchlist = "Watchlist"
+    case search = "Search"
 }
 
 struct HomeView: View {
     
-    @State var screen: Screen? = .upcoming
+    @State private var screen: Screen? = .upcoming
     
     var body: some View {
         #if os(iOS)
-            TabBarView(currentTab: screen)
+        TabBarView(currentTab: $screen)
+            
         #else
-            NavigationView {
-                SidebarView(currentSelection: $screen)
-                Text("Select a page")
-            }
-            .navigationViewStyle(DoubleColumnNavigationViewStyle())
+        NavigationView {
+            SidebarView(currentSelection: $screen)
+            .navigationTitle((screen ?? .upcoming).rawValue)
+        }
+        .navigationViewStyle(DoubleColumnNavigationViewStyle())
+
         #endif
     }
 }
 
-struct SidebarView: View {
+private struct SidebarView: View {
     
     @Binding var currentSelection: Screen?
+    @State var searchQuery: String = ""
+    @State var searchResult: [SearchResult] = [];
     
     var body: some View {
         VStack {
             Text("Watchlist")
                 .font(.system(size: 20, design: Font.Design.serif))
                 .fontWeight(.bold)
-                .padding(.vertical, 20)
+            
             List {
+                NavigationLink(
+                    destination: SearchView(),
+                    tag: Screen.search,
+                    selection: $currentSelection,
+                    label: {
+                        Label(Screen.search.rawValue, systemImage: "magnifyingglass")
+                    }
+                )
                 NavigationLink(
                     destination: UpcomingView(),
                     tag: Screen.upcoming,
                     selection: $currentSelection,
                     label: {
-                        Label("Upcoming", systemImage: "calendar.badge.clock")
+                        Label(Screen.upcoming.rawValue, systemImage: "calendar.badge.clock")
                     }
                 )
                 NavigationLink(
@@ -53,50 +67,42 @@ struct SidebarView: View {
                     tag: Screen.watchlist,
                     selection: $currentSelection,
                     label: {
-                        Label("Watchlist", systemImage: "play.rectangle")
-                    }
-                )
-                NavigationLink(
-                    destination: SettingsView(),
-                    tag: Screen.settings,
-                    selection: $currentSelection,
-                    label: {
-                        Label("Settings", systemImage: "gearshape")
+                        Label(Screen.watchlist.rawValue, systemImage: "play.rectangle")
                     }
                 )
             }
             .listStyle(SidebarListStyle())
             .frame(minWidth: 170, minHeight: 400)
-            
         }
     }
 }
 
-struct TabBarView: View {
+private struct TabBarView: View {
     
-    @State var currentTab: Screen?
+    @Binding var currentTab: Screen?
     
     var body: some View {
         TabView(selection: $currentTab) {
+            
             UpcomingView()
-                .padding()
-                .tabItem {
-                    Label("Upcoming", systemImage: "calendar.badge.clock")
-                }
-                .tag(Screen.upcoming)
+            .tabItem {
+                Label(Screen.upcoming.rawValue, systemImage: "calendar.badge.clock")
+            }
+            .tag(Screen.upcoming)
+            
             WatchlistView()
-                .padding()
-                .tabItem {
-                    Label("Watchlist", systemImage: "play.rectangle")
-                }
-                .tag(Screen.watchlist)
-            SettingsView()
-                .padding()
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape")
-                }
-                .tag(Screen.settings)
+            .tabItem {
+                Label(Screen.watchlist.rawValue, systemImage: "play.rectangle")
+            }
+            .tag(Screen.watchlist)
+            
+            SearchView()
+            .tabItem {
+                Label(Screen.search.rawValue, systemImage: "magnifyingglass")
+            }
+            .tag(Screen.search)
         }
+        .edgesIgnoringSafeArea([.horizontal, .top])
     }
 }
 

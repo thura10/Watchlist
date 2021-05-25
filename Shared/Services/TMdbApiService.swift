@@ -15,14 +15,12 @@ class TMDb {
     init() {}
     
     func search(query: String, type: MediaType, completion: @escaping ([SearchResult]) -> ()) {
-        if (type == .media) {
-            var result: [SearchResult] = [];
-            searchType(query: query, type: "movie") { (resultMovie) in
-                result.append(contentsOf: resultMovie)
-                self.searchType(query: query, type: "tv") { (resultTv) in
-                    result.append(contentsOf: resultTv)
-                    completion(result)
+        if (type == .multi) {
+            searchType(query: query, type: type.rawValue) { (result) in
+                let filteredResult = result.filter { (item) -> Bool in
+                    return item.mediaType != "person"
                 }
+                completion(filteredResult)
             }
         }
         else {
@@ -41,10 +39,15 @@ class TMDb {
         urlComp?.queryItems = queryItems
     
         guard let url = urlComp?.url else { return }
-        URLSession.shared.dataTask(with: url) { (data, _, _) in
+        let request = URLRequest(url: url)
+        URLSession.shared.dataTask(with: request) { (data, _, error) in
+            
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase
-            let result = try! decoder.decode(SearchData.self, from: data!)
+            
+            guard let data = data else { return print(error?.localizedDescription ?? "API Error") }
+            
+            let result = try! decoder.decode(SearchData.self, from: data)
             
             DispatchQueue.main.async {
                 completion(result.results)
@@ -69,11 +72,12 @@ struct SearchResult: Codable, Identifiable {
     var title: String?
     var voteAverage: Double?
     var overview, releaseDate, tagline: String?
+    var mediaType: String?
     
     var name: String?
     var firstAirDate: String?
     
-    init(id: Int, posterPath: String, backdropPath: String, title: String, voteAverage: Double, overview: String, releaseDate: String, tagline: String) {
+    init(id: Int, posterPath: String, backdropPath: String, title: String, voteAverage: Double, overview: String, releaseDate: String, tagline: String, mediaType: String) {
         self.id = id
         self.posterPath = posterPath
         self.backdropPath = backdropPath
@@ -85,38 +89,37 @@ struct SearchResult: Codable, Identifiable {
         self.name = nil
         self.firstAirDate = ""
         self.tagline = tagline
+        self.mediaType = mediaType
     }
     
-    var poster: Data {
+    var poster: Image {
         get {
-            #if os(iOS)
-            let defaultImg = (UIImage(named: "defaultPoster")!).jpegData(compressionQuality: 1.0)
-            #elseif os(macOS)
-            let defaultImg = NSDataAsset(name: "defaultPoster", bundle: Bundle.main)?.data
-            #endif
+            
+            let defaultImg = Image(uiImage: UIImage(named: "defaultPoster")!)
             
             guard let image = posterPath else {
-                return defaultImg!
+                return defaultImg
             }
 
             let url = URL(string: "https://image.tmdb.org/t/p/w185" + image)!;
             do {
-                return try Data.init(contentsOf: url)
+                return try Image(uiImage: UIImage(data: Data.init(contentsOf: url))!)
             }
             catch {
-                return defaultImg!
+                return defaultImg
             }
         }
     }
     
-    var backdrop: Data? {
+    var backdrop: Image? {
         get {
+            
             guard let image = self.backdropPath else {
                 return nil
             }
             let url =  URL(string: "https://image.tmdb.org/t/p/original" + image)!
             do {
-                return try Data.init(contentsOf: url)
+                return try Image(uiImage: UIImage(data: Data.init(contentsOf: url))!)
             }
             catch {
                 return nil
@@ -139,6 +142,6 @@ struct SearchResult: Codable, Identifiable {
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, popularity, posterPath, backdropPath, title, voteAverage, overview, releaseDate, name, firstAirDate, tagline
+        case id, popularity, posterPath, backdropPath, title, voteAverage, overview, releaseDate, name, firstAirDate, tagline, mediaType
     }
 }
