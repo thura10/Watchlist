@@ -13,61 +13,57 @@ struct WatchlistView: View {
     @State private var selectedView: Views = .card
     
     enum Views: String {
-        case card = "rectangle.stack"
+        case card = "square.stack.fill"
         case grid = "rectangle.grid.3x2"
         case list = "list.bullet"
     }
     
     var body: some View {
-        NavigationView {
-            VStack {
-                switch selectedView {
-                    case .card:
-                        WatchlistCardView();
-                    case .grid:
-                        WatchlistGridView();
-                    case .list:
-                        WatchlistListView();
-                }
+        VStack {
+            switch selectedView {
+                case .card:
+                    WatchlistCardView();
+                case .grid:
+                    WatchlistGridView();
+                case .list:
+                    WatchlistListView();
             }
-            .navigationTitle("Watchlist")
-            .navigationViewStyle(DefaultNavigationViewStyle())
-            .frame(minWidth: 400, minHeight: 400)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Picker("Media Type", selection: $mediaType) {
-                        Text("Movies")
-                        .tag(MediaType.movie)
-                        
-                        Text("TV Shows")
-                        .tag(MediaType.tv)
-                    }
-                    .pickerStyle(SegmentedPickerStyle())
+        }
+        .navigationTitle("Watchlist")
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Picker("Media Type", selection: $mediaType) {
+                    Text("Movies")
+                    .tag(MediaType.movie)
+                    
+                    Text("TV Shows")
+                    .tag(MediaType.tv)
                 }
-                
-                #if os(macOS)
-                ToolbarItem(placement: .primaryAction) {
-                    Spacer()
-                }
-                #endif
+                .pickerStyle(SegmentedPickerStyle())
+            }
+            
+            #if os(macOS)
+            ToolbarItem(placement: .primaryAction) {
+                Spacer()
+            }
+            #endif
 
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
-                        Picker("View", selection: $selectedView) {
-                            Text("As Cards")
-                            .tag(Views.card)
-                            
-                            Text("As Grid")
-                            .tag(Views.grid)
-                            
-                            Text("As List")
-                            .tag(Views.list)
-                        }
-                        .pickerStyle(InlinePickerStyle())
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Picker("View", selection: $selectedView) {
+                        Text("As Cards")
+                        .tag(Views.card)
+                        
+                        Text("As Grid")
+                        .tag(Views.grid)
+                        
+                        Text("As List")
+                        .tag(Views.list)
                     }
-                    label: {
-                        Label("View", systemImage: selectedView.rawValue)
-                    }
+                    .pickerStyle(InlinePickerStyle())
+                }
+                label: {
+                    Label("View", systemImage: selectedView.rawValue)
                 }
             }
         }

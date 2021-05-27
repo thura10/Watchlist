@@ -29,6 +29,9 @@
 		2B4E78F52659352900E79893 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B4E78DC2659352600E79893 /* Persistence.swift */; };
 		2B4E78F62659352900E79893 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B4E78DD2659352900E79893 /* Assets.xcassets */; };
 		2B4E78F72659352900E79893 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B4E78DD2659352900E79893 /* Assets.xcassets */; };
+		2B9F6653265ED6FE000465AC /* StackNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAEBE7F265D323E00FE4136 /* StackNavigationView.swift */; };
+		2B9F6657265ED713000465AC /* AsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9F6656265ED713000465AC /* AsyncImage.swift */; };
+		2B9F6658265ED713000465AC /* AsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9F6656265ED713000465AC /* AsyncImage.swift */; };
 		2BAEBE80265D323E00FE4136 /* StackNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAEBE7F265D323E00FE4136 /* StackNavigationView.swift */; };
 		2BD53D83265BE4A100345D84 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD53D82265BE4A100345D84 /* SettingsView.swift */; };
 		2BD53D84265BE4A100345D84 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD53D82265BE4A100345D84 /* SettingsView.swift */; };
@@ -54,6 +57,7 @@
 		2B4E78EA2659352900E79893 /* Watchlist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Watchlist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B4E78EC2659352900E79893 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2B4E78ED2659352900E79893 /* macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = macOS.entitlements; sourceTree = "<group>"; };
+		2B9F6656265ED713000465AC /* AsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncImage.swift; sourceTree = "<group>"; };
 		2BAEBE7F265D323E00FE4136 /* StackNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackNavigationView.swift; sourceTree = "<group>"; };
 		2BD53D82265BE4A100345D84 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		2BD53D87265BEF4800345D84 /* MenuCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuCommands.swift; sourceTree = "<group>"; };
@@ -85,7 +89,6 @@
 				2B10AE2A265B0BBB00C06B41 /* UpcomingView.swift */,
 				2B10AE2F265B0BC800C06B41 /* WatchlistView.swift */,
 				2BD53D82265BE4A100345D84 /* SettingsView.swift */,
-				2BAEBE7F265D323E00FE4136 /* StackNavigationView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -123,7 +126,7 @@
 		2B4E78D72659352600E79893 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				2BD53D87265BEF4800345D84 /* MenuCommands.swift */,
+				2B9F6652265ED6EE000465AC /* ViewModels */,
 				2B3B5D9026595BBB0006FF83 /* Models */,
 				2B3B5D8F26595B100006FF83 /* Services */,
 				2B3B5D8D26595AFF0006FF83 /* Views */,
@@ -157,6 +160,16 @@
 				2B4E78ED2659352900E79893 /* macOS.entitlements */,
 			);
 			path = macOS;
+			sourceTree = "<group>";
+		};
+		2B9F6652265ED6EE000465AC /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				2BD53D87265BEF4800345D84 /* MenuCommands.swift */,
+				2BAEBE7F265D323E00FE4136 /* StackNavigationView.swift */,
+				2B9F6656265ED713000465AC /* AsyncImage.swift */,
+			);
+			path = ViewModels;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -256,9 +269,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B9F6657265ED713000465AC /* AsyncImage.swift in Sources */,
 				2B10AE30265B0BC800C06B41 /* WatchlistView.swift in Sources */,
 				2B350B19265AFFB6002B85B5 /* HomeView.swift in Sources */,
 				2B15792E26595F240039093A /* Watchlist+CoreDataClass.swift in Sources */,
+				2B9F6653265ED6FE000465AC /* StackNavigationView.swift in Sources */,
 				2B157941265974690039093A /* SearchView.swift in Sources */,
 				2B15793026595F240039093A /* Watchlist+CoreDataProperties.swift in Sources */,
 				2B4E78EE2659352900E79893 /* Watchlist.xcdatamodeld in Sources */,
@@ -275,6 +290,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B9F6658265ED713000465AC /* AsyncImage.swift in Sources */,
 				2B10AE31265B0BC800C06B41 /* WatchlistView.swift in Sources */,
 				2B350B1A265AFFB6002B85B5 /* HomeView.swift in Sources */,
 				2B15792F26595F240039093A /* Watchlist+CoreDataClass.swift in Sources */,

@@ -18,35 +18,32 @@ struct UpcomingView: View {
     }
     
     var body: some View {
-        NavigationView {
-            VStack {
-                Text("upcoming Page")
+        VStack {
+            Text("upcoming Page")
+        }
+        .navigationTitle("Upcoming")
+        .toolbar {
+            #if os(macOS)
+            ToolbarItem(placement: .primaryAction) {
+                Spacer()
             }
-            .navigationTitle("Upcoming")
-            .frame(minWidth: 400, minHeight: 400)
-            .toolbar {
-                #if os(macOS)
-                ToolbarItem(placement: .primaryAction) {
-                    Spacer()
+            #endif
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Picker("View", selection: $selectedView) {
+                        Text("As List")
+                        .tag(Views.list)
+                        
+                        Text("As Calendar")
+                        .tag(Views.calendar)
+                        
+                        Text("As Grid")
+                        .tag(Views.grid)
+                    }
+                    .pickerStyle(InlinePickerStyle())
                 }
-                #endif
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
-                        Picker("View", selection: $selectedView) {
-                            Text("As List")
-                            .tag(Views.list)
-                            
-                            Text("As Calendar")
-                            .tag(Views.calendar)
-                            
-                            Text("As Grid")
-                            .tag(Views.grid)
-                        }
-                        .pickerStyle(InlinePickerStyle())
-                    }
-                    label: {
-                        Label("View", systemImage: selectedView.rawValue)
-                    }
+                label: {
+                    Label("View", systemImage: selectedView.rawValue)
                 }
             }
         }

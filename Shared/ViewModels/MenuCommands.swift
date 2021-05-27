@@ -7,16 +7,6 @@
 
 import SwiftUI
 
-#if os(macOS)
-typealias UIImage = NSImage
-
-extension Image {
-    init(uiImage: UIImage) {
-        self.init(nsImage: uiImage)
-    }
-}
-#endif
-
 struct MenuCommands: Commands {
     var body: some Commands {
         SidebarCommands()

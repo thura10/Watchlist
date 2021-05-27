@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 class TMDb {
     let apiKey: String = "ef0b54d540e68c2dd4a0ff428b46161c";
@@ -14,46 +15,16 @@ class TMDb {
     
     init() {}
     
-    func search(query: String, type: MediaType, completion: @escaping ([SearchResult]) -> ()) {
-        if (type == .multi) {
-            searchType(query: query, type: type.rawValue) { (result) in
-                let filteredResult = result.filter { (item) -> Bool in
-                    return item.mediaType != "person"
-                }
-                completion(filteredResult)
-            }
-        }
-        else {
-            searchType(query: query, type: type.rawValue) { (result) in
-                completion(result)
-            }
-        }
-        
-    }
-    
-    private func searchType(query: String, type: String, completion: @escaping ([SearchResult]) -> ()) {
-        
+    func searchForType(query: String, type: MediaType) -> Publishers.Share<URLSession.DataTaskPublisher>? {
         let queryItems = [URLQueryItem(name: "api_key", value: self.apiKey), URLQueryItem(name: "language", value: "en-US"), URLQueryItem(name: "query", value: query)]
         
-        var urlComp = URLComponents(string: baseUrl + "/search/\(type)")
+        var urlComp = URLComponents(string: baseUrl + "/search/\(type.rawValue)")
         urlComp?.queryItems = queryItems
+        
+        // THIS DOES NOT FILTER OUT ACTOR ITEMS IN MULTI SEARCH
     
-        guard let url = urlComp?.url else { return }
-        let request = URLRequest(url: url)
-        URLSession.shared.dataTask(with: request) { (data, _, error) in
-            
-            let decoder = JSONDecoder()
-            decoder.keyDecodingStrategy = .convertFromSnakeCase
-            
-            guard let data = data else { return print(error?.localizedDescription ?? "API Error") }
-            
-            let result = try! decoder.decode(SearchData.self, from: data)
-            
-            DispatchQueue.main.async {
-                completion(result.results)
-            }
-        }
-        .resume()
+        guard let url = urlComp?.url else { return nil }
+        return URLSession.shared.dataTaskPublisher(for: url).share()
     }
     
 }
@@ -63,9 +34,9 @@ struct SearchData: Codable {
     let results: [SearchResult]
 }
 
-struct SearchResult: Codable, Identifiable {
+struct SearchResult: Codable, Identifiable, Equatable {
     
-    var id: Int?
+    var id: Int
     var popularity: Double?
     var posterPath: String?
     var backdropPath: String?
@@ -92,38 +63,21 @@ struct SearchResult: Codable, Identifiable {
         self.mediaType = mediaType
     }
     
-    var poster: Image {
+    var posterURL: URL? {
         get {
-            
-            let defaultImg = Image(uiImage: UIImage(named: "defaultPoster")!)
-            
             guard let image = posterPath else {
-                return defaultImg
+                return nil
             }
-
-            let url = URL(string: "https://image.tmdb.org/t/p/w185" + image)!;
-            do {
-                return try Image(uiImage: UIImage(data: Data.init(contentsOf: url))!)
-            }
-            catch {
-                return defaultImg
-            }
+            return URL(string: "https://image.tmdb.org/t/p/w185" + image)!
         }
     }
     
-    var backdrop: Image? {
+    var backdropURL: URL? {
         get {
-            
             guard let image = self.backdropPath else {
                 return nil
             }
-            let url =  URL(string: "https://image.tmdb.org/t/p/original" + image)!
-            do {
-                return try Image(uiImage: UIImage(data: Data.init(contentsOf: url))!)
-            }
-            catch {
-                return nil
-            }
+            return URL(string: "https://image.tmdb.org/t/p/original" + image)!
         }
     }
     

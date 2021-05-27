@@ -10,57 +10,46 @@ import Combine
 
 struct SearchView: View {
     
-    @State var searchResult: [SearchResult] = []
+    @Binding var searchResults: [SearchResult]
     @State var mediaType: MediaType = .multi
     
-    @State var searchQuery: String = ""
-    
-    func getSearchResults() {
-        if (!self.searchQuery.isEmpty) {
-            TMDb().search(query: self.searchQuery, type: mediaType) { (result) in
-                self.searchResult = result;
-            }
+    var filteredResults: [SearchResult] {
+        searchResults.filter { item in
+            return ((mediaType == .multi) || (item.mediaType == mediaType.rawValue))
         }
     }
     
     var body: some View {
-        NavigationView {
-            VStack {
-                SearchBarView(debouncedText: $searchQuery)
-                .padding(.vertical)
-                .onChange(of: searchQuery, perform: { value in
-                    self.getSearchResults()
-                })
-                
-                if (searchResult.count == 0) {
-                    Text("Enter a search query")
-                        .padding(.top)
-                }
-                
-                List(searchResult) { result in
-                    SearchResultItem(item: result, mediaType: mediaType)
-                }
-                .listStyle(InsetListStyle())
-                .listRowBackground(Color.clear)
+        VStack {
+            #if os(iOS)
+            SearchBarView(searchResults: $searchResults)
+            .padding(.vertical)
+            #endif
+            
+            if filteredResults.count < 1 {
+                Text("No results")
+                    .padding(.top)
             }
-            .onChange(of: self.mediaType, perform: { value in
-                self.getSearchResults()
-            })
-            .navigationTitle("Search")
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Picker("Media Type", selection: $mediaType) {
-                        Text("All")
-                        .tag(MediaType.multi)
-                        
-                        Text("Movies")
-                        .tag(MediaType.movie)
-                        
-                        Text("TV Shows")
-                        .tag(MediaType.tv)
-                    }
-                    .pickerStyle(SegmentedPickerStyle())
+            List(filteredResults) { result in
+                SearchResultItem(item: result, mediaType: mediaType)
+            }
+                .listStyle(InsetListStyle())
+                .padding(.top, 10)
+        }
+        .navigationTitle("Search")
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Picker("Media Type", selection: $mediaType) {
+                    Text("All")
+                    .tag(MediaType.multi)
+                    
+                    Text("Movies")
+                    .tag(MediaType.movie)
+                    
+                    Text("TV Shows")
+                    .tag(MediaType.tv)
                 }
+                .pickerStyle(SegmentedPickerStyle())
             }
         }
     }
@@ -69,12 +58,24 @@ struct SearchView: View {
 struct SearchResultItem: View {
     
     var item: SearchResult
-    @State var mediaType: MediaType
+    var mediaType: MediaType
+    
+    init(item: SearchResult, mediaType: MediaType) {
+        self.item = item;
+        if let type = item.mediaType {
+            self.mediaType = MediaType.init(rawValue: type) ?? .tv
+        }
+        else {
+            self.mediaType = mediaType
+        }
+    }
     
     var body: some View {
         HStack {
-            item.poster
-                .resizable()
+            AsyncImage(url: item.posterURL, placeholder: {
+                Image("defaultPoster")
+                    .resizable()
+            })
                 .frame(width: 70, height: 105)
                 .cornerRadius(8)
                 .padding(.vertical, 7)
@@ -84,7 +85,22 @@ struct SearchResultItem: View {
                     .font(.title3)
                     .fontWeight(.semibold)
                     .padding(.leading)
-                Text(item.year)
+                
+                HStack {
+                    Text(item.year)
+                        .padding(.trailing, 20)
+                    #if os(macOS)
+                    if let rating: Double = item.voteAverage {
+                        ForEach(0..<Int(rating/2)) { _ in
+                            Image(systemName: "star.fill")
+                        }
+                        let remainder = rating.truncatingRemainder(dividingBy: 1)
+                        if (remainder > 0.4 && remainder < 1) {
+                            Image(systemName: "star.leadinghalf.fill")
+                        }
+                    }
+                    #endif
+                }
                     .padding(.top, 5.0)
                     .padding(.leading)
             }
@@ -110,37 +126,75 @@ struct SearchResultItem: View {
                 .buttonStyle(PlainButtonStyle())
             }
         }
-        .onAppear(perform: {
-            if let type = item.mediaType {
-                self.mediaType = MediaType.init(rawValue: type) ?? .tv
-            }
-        })
     }
 }
 
 
 struct SearchBarView: View {
     
-    @Binding var debouncedText : String
+    @Binding var searchResults : [SearchResult]
     @StateObject private var textObserver = TextFieldObserver()
+
+    var onCommit: (() -> Void) = {
+        
+    }
     
     var body: some View {
-    
         VStack {
-            TextField("Search...", text: $textObserver.searchText)
-                .frame(height: 30)
-                .padding(.leading, 5)
-                .padding(.horizontal, 20)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-        }.onReceive(textObserver.$debouncedText) { (val) in
-            debouncedText = val
+            let textField = TextField("Search...", text: $textObserver.searchText,
+                onCommit: {
+                    self.onCommit()
+                }
+            )
+            #if os(iOS)
+            textField
+                .font(.body)
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
+                .textFieldStyle(PlainTextFieldStyle())
+                .padding(7)
+                .padding(.horizontal, 40)
+                .background(Color(.systemGray6))
+                .cornerRadius(8)
+                .overlay(
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.gray)
+                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                            .padding(.leading, 15)
+                    }
+                )
+                .padding(.horizontal, 13)
+            #else
+            textField
+                .font(Font.system(size: 13, weight: .light, design: .default))
+                .disableAutocorrection(true)
+                .textFieldStyle(PlainTextFieldStyle())
+                .padding(5)
+                .padding(.leading, 25)
+                .background(Color(NSColor.separatorColor))
+                .cornerRadius(8)
+                .overlay(
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.gray)
+                            .font(.title3)
+                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                            .padding(.leading, 6)
+                    }
+                )
+                .padding(.horizontal, 10)
+            #endif
+        }
+        .onReceive(textObserver.$searchResult) { (val) in
+            self.searchResults = val
         }
     }
 }
 
 class TextFieldObserver : ObservableObject {
-    @Published var debouncedText = ""
     @Published var searchText = ""
+    @Published var searchResult : [SearchResult] = []
     
     private var subscriptions = Set<AnyCancellable>()
     
@@ -148,14 +202,42 @@ class TextFieldObserver : ObservableObject {
         $searchText
             .debounce(for: .seconds(1), scheduler: DispatchQueue.main)
             .sink(receiveValue: { t in
-                self.debouncedText = t
-            } )
+                guard !t.isEmpty else {
+                    return self.searchResult = []
+                }
+                guard let request = TMDb().searchForType(query: t, type: .multi) else {
+                    return self.searchResult = []
+                }
+                
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .convertFromSnakeCase
+                
+                request
+                    .tryMap() { element -> Data in
+                        guard let httpResponse = element.response as? HTTPURLResponse,
+                            httpResponse.statusCode == 200 else {
+                                throw URLError(.badServerResponse)
+                            }
+                        return element.data
+                    }
+                    .decode(type: SearchData.self, decoder: decoder)
+                    .compactMap {
+                        return $0.results.filter { result in
+                            return (result.mediaType == "movie" || result.mediaType == "tv")
+                        }
+                    }
+                    .receive(on: DispatchQueue.main)
+                    .sink(receiveCompletion: { _ in }, receiveValue: { d in
+                        self.searchResult = d
+                    })
+                    .store(in: &self.subscriptions)
+            })
             .store(in: &subscriptions)
     }
 }
 
 struct SearchView_Previews: PreviewProvider {
     static var previews: some View {
-        SearchView()
+        SearchView(searchResults: .constant([]))
     }
 }

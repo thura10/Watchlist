@@ -20,7 +20,7 @@ struct HomeView: View {
     
     var body: some View {
         #if os(iOS)
-        TabBarView(currentTab: $screen)
+        TabBarView()
             
         #else
         NavigationView {
@@ -36,26 +36,33 @@ struct HomeView: View {
 private struct SidebarView: View {
     
     @Binding var currentSelection: Screen?
-    @State var searchQuery: String = ""
-    @State var searchResult: [SearchResult] = [];
+    @State var searchResults: [SearchResult] = []
+    
+    func showSearchResults() {
+        if (!self.searchResults.isEmpty) {
+            self.currentSelection = .search
+        }
+    }
     
     var body: some View {
-        VStack {
-            Text("Watchlist")
-                .font(.system(size: 20, design: Font.Design.serif))
-                .fontWeight(.bold)
+        VStack {            
+            NavigationLink(
+                destination: SearchView(searchResults: $searchResults).frame(minWidth: 400),
+                tag: Screen.search,
+                selection: $currentSelection
+            ) {
+                SearchBarView(searchResults: $searchResults, onCommit: showSearchResults)
+                    .padding(0)
+            }
+            .padding(.vertical, 10)
+            .buttonStyle(PlainButtonStyle())
+            .onChange(of: self.searchResults, perform: { value in
+                showSearchResults()
+            })
             
             List {
                 NavigationLink(
-                    destination: SearchView(),
-                    tag: Screen.search,
-                    selection: $currentSelection,
-                    label: {
-                        Label(Screen.search.rawValue, systemImage: "magnifyingglass")
-                    }
-                )
-                NavigationLink(
-                    destination: UpcomingView(),
+                    destination: UpcomingView().frame(minWidth: 400),
                     tag: Screen.upcoming,
                     selection: $currentSelection,
                     label: {
@@ -63,7 +70,7 @@ private struct SidebarView: View {
                     }
                 )
                 NavigationLink(
-                    destination: WatchlistView(),
+                    destination: WatchlistView().frame(minWidth: 400),
                     tag: Screen.watchlist,
                     selection: $currentSelection,
                     label: {
@@ -79,26 +86,34 @@ private struct SidebarView: View {
 
 private struct TabBarView: View {
     
-    @Binding var currentTab: Screen?
+    @State var searchResults: [SearchResult] = []
     
     var body: some View {
-        TabView(selection: $currentTab) {
-            
-            UpcomingView()
+        TabView() {
+            NavigationView {
+                UpcomingView()
+            }
             .tabItem {
-                Label(Screen.upcoming.rawValue, systemImage: "calendar.badge.clock")
+                Image(systemName: "calendar.badge.clock")
+                Text(Screen.upcoming.rawValue)
             }
             .tag(Screen.upcoming)
             
-            WatchlistView()
+            NavigationView {
+                WatchlistView()
+            }
             .tabItem {
-                Label(Screen.watchlist.rawValue, systemImage: "play.rectangle")
+                Image(systemName: "play.rectangle")
+                Text(Screen.watchlist.rawValue)
             }
             .tag(Screen.watchlist)
             
-            SearchView()
+            NavigationView {
+                SearchView(searchResults: $searchResults)
+            }
             .tabItem {
-                Label(Screen.search.rawValue, systemImage: "magnifyingglass")
+                Image(systemName: "magnifyingglass")
+                Text(Screen.search.rawValue)
             }
             .tag(Screen.search)
         }
